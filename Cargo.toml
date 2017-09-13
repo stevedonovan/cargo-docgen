@@ -1,0 +1,17 @@
+[package]
+name = "cargo-docgen"
+version = "0.1.0"
+authors = ["steve donovan <steve.j.donovan@gmail.com>"]
+
+documentation = "https://docs.rs/cargo-codegen"
+repository = "https://github.com/stevedonovan/cargo-codegen"
+
+readme = "readme.md"
+
+keywords = ["documentation","snippets","testing","cargo"]
+
+license = "MIT"
+
+[dependencies]
+easy-shortcuts = "0.2"
+lapp = "0.2.2"
