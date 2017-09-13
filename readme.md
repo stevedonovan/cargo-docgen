@@ -12,11 +12,11 @@ first edition of the Rust book:
 Every item (module, function, method, etc) should have an example which both _compiles_ and
 _runs as a test_.
 
-However, if you mosey to that most excellent site [docs.rs](https://docs.rs) and browse the
-11,000-odd crates, you will see that many don't even try to provide any documentation, which
+However, if you mosey to that most excellent site [docs.rs](https://docs.rs) and browse some of
+the 11,000-odd crates, you will see that many don't even try to provide any documentation, which
 is disappointimg and leaves you with the irritating necessity of _actually reading the source_.
 Part of this is just human nature, or at least the nature of programmers who find it difficult
-to switch from code to English, but part of it is that good documentation is _hard work_.
+to switch from code to English, but much of it is that good documentation is _hard work_.
 Not only is formatting doc tests tiresome, but running `cargo test` to run all the tests
 can take a fair amount of time even for small projects.
 
@@ -50,9 +50,9 @@ $ cargo docgen answer.rs
 
 It will run this snippet using `cargo run --example` and comment the result appropriately.
 You can type the doc test in a real editor, run it immediately, and
-have something that can be pasted directly into your code.  (I don't know about others, but
-I do like typing Rust in a code-aware editor, and I do not like waiting for several minutes
-to find out if I have made the inevitable mistake.)
+have something that can be pasted directly into your code.  (I don't know about other people, but
+I like typing Rust in a code-aware editor, and I do not like waiting
+to find out if I have inevitable mistakes.)
 
 This comment is suitable for any code item which is not module-level. If I said `cargo docgen -m answer.rs`,
 the result is formatted for a module-level example:
@@ -77,7 +77,7 @@ assert!(pat.matches("  "));
 ```
 It's common to see `unwrap` in little examples, and it is both nasty and misleading, because
 in well-written code, it hardly appears. In real life, we use the question mark operator for
-error handling! As the Guidelines say: "Like it or not, example code is often copied verbatim
+error handling. As the Guidelines say: "Like it or not, example code is often copied verbatim
 by users. Unwrapping an error should be a conscious decision that the user needs to make."
 
 This is the purpose of the `--question` flag (`-q` for short.)
@@ -108,9 +108,10 @@ And `cargo docgen -q -i4 new_try.rs` will generate the following code:
 ```
 
 This is the recommended way to present code where
-errors may occur - but that's a lot of boilerplate!  The doc test syntax allows for
+errors may occur, and it's a lot of boilerplate.  The doc test syntax allows for
 lines to be hidden using `#`, so only the actual snippet lines will appear in the rendered
-documentation. (Here we're using the convenient fact that _any_ `Error` type will convert into a `Box<Error>`)
+documentation.
+(Here we're using the convenient fact that _any_ `Error` type will convert into a `Box<Error>`)
 
 Compiling and running this snippet took 1.2s - `cargo test` for the whole project took 14.7s in clock time!
 And it would take far longer, and be more painful, to enter the full commented code directly
@@ -143,7 +144,7 @@ $ cargo docgen -n loop.rs
 ## Testing and Formatting Markdown
 
 The `--module-doc` (`-M`) flag lets you process a _whole Markdown file_ containing little doc test
-snippets.
+snippets. Here is a silly example:
 
 > This should be any text
 > whatsoever which can be edited safely. Snippets are only
@@ -176,53 +177,57 @@ This is almost the Github-flavoured Markdown that we know and love, with one lit
 If a doc test uses the question-operator, `cargo codegen` needs to know so it can
 generate the necessary boilerplate. Since reliably detecting `?` in source is tricky
 (it could be in a comment, or in a string) I've opted for an explicit approach, where
-the usual guard is followed by '?'.
+the usual guard "```rust" becomes "```rust?".
 
 Running `cargo docgen -M doc.md` gives, after _running each snippet_:
 
-> //! This should be any text
-> //! whatsoever which can be edited safely. Snippets are only
-> //! run if they change:
-> //!
-> //! ```
-> //! # use std::error::Error;
-> //! #
-> //! # fn run() -> Result<(),Box<Error>> {
-> //! use lua_patterns::*;
-> //! let mut pat = LuaPattern::new_try("^%s*$")?;
-> //! assert!(pat.matches("  "));
-> //! assert!(! pat.matches(" x "));
-> //! # Ok(())
-> //! # }
-> //! #
-> //! # fn main() {
-> //! #    run().unwrap();
-> //! # }
-> //! ```
-> //! and the text continues.
-> //!
-> //! This shows how by default matches are 'unanchored':
-> //!
-> //! ```
-> //! let mut pat = lua_patterns::LuaPattern::new("boo");
-> //! assert!( pat.matches("boo") );
-> //! assert!( pat.matches("  boo ") );
-> //! ```
-> //!
-> //! And another:
-> //! ```
-> //! for i in 0..4 {
-> //!     println!("gotcha! {}",i);
-> //! }
-> //! ```
-> //!
+```
+//! This should be any text
+//! whatsoever which can be edited safely. Snippets are only
+//! run if they change:
+//!
+//! ```
+//! # use std::error::Error;
+//! #
+//! # fn run() -> Result<(),Box<Error>> {
+//! use lua_patterns::*;
+//! let mut pat = LuaPattern::new_try("^%s*$")?;
+//! assert!(pat.matches("  "));
+//! assert!(! pat.matches(" x "));
+//! # Ok(())
+//! # }
+//! #
+//! # fn main() {
+//! #    run().unwrap();
+//! # }
+//! ```
+//! and the text continues.
+//!
+//! This shows how by default matches are 'unanchored':
+//!
+//! ```
+//! let mut pat = lua_patterns::LuaPattern::new("boo");
+//! assert!( pat.matches("boo") );
+//! assert!( pat.matches("  boo ") );
+//! ```
+//!
+//! And another:
+//! ```
+//! for i in 0..4 {
+//!     println!("gotcha! {}",i);
+//! }
+//! ```
+//!
+```
 
 Furthermore, these code snippets are cached (look in 'doc.md.cache' afterwards)
 and subsequent runs will _only_ re-run those doc tests which have in fact
 changed.
 
-Good Rust document tests are hard to _type_, and I hope this makes it easier
+Good Rust document tests are hard to _type_, and I hope this utility makes it easier
 for other lazy people to write better, functional documentation for their crates.
+To install, just use `cargo install cargo-docgen`.
+
 
 
 
