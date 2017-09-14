@@ -3,7 +3,7 @@ name = "cargo-docgen"
 version = "0.1.0"
 authors = ["steve donovan <steve.j.donovan@gmail.com>"]
 
-documentation = "https://docs.rs/cargo-codegen"
+documentation = "https://docs.rs/cargo-docgen"
 repository = "https://github.com/stevedonovan/cargo-codegen"
 
 readme = "readme.md"
