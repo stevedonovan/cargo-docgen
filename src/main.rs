@@ -6,7 +6,7 @@
 extern crate easy_shortcuts as es;
 extern crate lapp;
 use es::traits::*;
-use std::path::PathBuf;
+use std::path::{Path,PathBuf};
 use std::env;
 use std::fs;
 use std::process;
@@ -236,13 +236,28 @@ impl <'a> Example<'a> {
 
 }
 
+// Very hacky stuff - we want the ACTUAL crate name, not the project name
+// So look just past [package] and scrape the name...
+// (borrowed from runner crate)
+fn toml_crate_name(cargo_toml: &Path) -> String {
+    let name_line = es::lines(es::open(cargo_toml))
+        .skip_while(|line| line.trim() != "[package]")
+        .skip(1)
+        .skip_while(|line| ! line.starts_with("name "))
+        .next().or_die("totally fked Cargo.toml");
+    let idx = name_line.find('"').or_die("no name?");
+    (&name_line[(idx+1)..(name_line.len()-1)]).into()
+
+}
+
 fn get_crate() -> (String,PathBuf) {
     let mut crate_dir = env::current_dir().or_die("cannot get current directory");
     loop {
-        if crate_dir.join("Cargo.toml").exists() {
-            let crate_name = crate_dir.file_name().or_die("can't get crate name");
+        let cargo_toml = crate_dir.join("Cargo.toml");
+        if cargo_toml.exists() {
+            let crate_name = toml_crate_name(&cargo_toml);
             return (
-                crate_name.to_str().unwrap().replace('-',"_").to_string(),
+                crate_name.replace('-',"_").into(),
                 crate_dir.join("examples")
             );
         }
