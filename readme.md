@@ -48,7 +48,9 @@ $ cargo docgen answer.rs
 /// ```
 ```
 
-It will run this snippet using `cargo run --example` and comment the result appropriately.
+It will first explicitly create a little Rust program using the [doctest rules](https://doc.rust-lang.org/book/first-edition/documentation.html#documentation-as-tests),
+run this code using `cargo run --example` and comment the result appropriately.
+
 You can type the doc test in a real editor, run it immediately, and
 have something that can be pasted directly into your code.  (I don't know about other people, but
 I like typing Rust in a code-aware editor, and I do not like waiting
@@ -220,7 +222,7 @@ Running `cargo docgen -M doc.md` gives, after _running each snippet_:
 //!
 ```
 
-Furthermore, these code snippets are cached (look in 'doc.md.cache' afterwards)
+Furthermore, these code snippets are cached (look in 'doc.cache' afterwards)
 and subsequent runs will _only_ re-run those doc tests which have in fact
 changed.
 

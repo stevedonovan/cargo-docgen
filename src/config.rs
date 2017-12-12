@@ -2,24 +2,66 @@ extern crate easy_shortcuts as es;
 extern crate lapp;
 use es::traits::*;
 use std::path::{Path,PathBuf};
-use std::env;
+use std::{env,process,str,io};
 
+// the one constructable error in stdlib
+fn io_error(msg: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::Other, msg)
+}
 
-pub const VERSION: &str = "0.1.2";
+// macro to hide some ugly ifs
+macro_rules! assert_err {
+    ( $cond:expr , $msg:expr ) => {
+        if ! $cond {
+            return Err(io_error($msg));
+        }
+    }
+}
+
+// define a custom Lapp type, rust_or_md_file
+struct RustFile {
+    path: PathBuf
+}
+
+impl str::FromStr for RustFile {
+    type Err = io::Error;
+
+    fn from_str(s: &str) -> Result<Self,Self::Err> {
+        let path = PathBuf::from(s);
+        assert_err!(path.exists(),"file does not exist");
+        {
+            let ext = path.extension().ok_or_else(|| io_error("file has no extension"))?;
+            assert_err!(ext == "md" || ext == "rs", "extension must be either .rs or .md");
+        }
+        assert_err!(path.parent().unwrap() == Path::new(""), "must be a plain filename in current directory");
+        Ok(RustFile{path: path})
+    }
+}
+
+const VERSION: &str = "0.1.2";
 
 const USAGE: &str = "
-cargo docgen. Compiles and runs test snippets
+cargo docgen. Compiles and runs doc test snippets.
+    These are in the same format as accepted by `cargo test`,
+    and are then output in the correct commmented form
+    for  pasting in your project. Must be run in some
+    subdirectory of a library crate.
 
-    -m, --module module test (//!)
+    -m, --module module test (//!) (Default is ///)
     -M, --module-doc input is a Markdown file containing
         code examples. Assumes `--module`
-    -q, --question optional support for ? error handling
     -i, --indent (default '0') indent in spaces ('4') or tabs ('1t')
-    -n, --no-run
+
+    -q, --question optional support for ? error handling
+    -n, --no-run  compile but don't run
+
     -V, --version
 
-    <script> (string) file containing doc test snippet.
-    If extension is '.md' assumes --module-doc
+    <script> (rust_or_md_file) plain filename containing doc test snippet.
+    If extension is .md assumes --module-doc, must otherwise
+    have extension .rs
+
+    https://github.com/stevedonovan/cargo-docgen/blob/master/readme.md
 ";
 
 pub struct Config<'a> {
@@ -32,18 +74,23 @@ pub struct Config<'a> {
     pub examples: PathBuf,
     pub crate_name: String,
     pub no_run: bool,
-    pub version: bool,
     pub args: lapp::Args<'a>,
 }
 
 impl <'a> Config<'a> {
     pub fn new() -> Config<'a> {
         let mut args = lapp::Args::new(USAGE).start(2);
+        args.user_types(&["rust_or_md_file"]);
         args.parse();
+
+        if args.get_bool("version") {
+            println!("version {}",VERSION);
+            process::exit(0);
+        }
+
         let (crate_name,examples) = get_crate();
         let mut res = Config {
-
-            file: PathBuf::from(args.get_string("script")),
+            file: args.get::<RustFile>("script").path,
             module: args.get_bool("module"),
             module_doc: args.get_bool("module-doc"),
             question: args.get_bool("question"),
@@ -52,7 +99,6 @@ impl <'a> Config<'a> {
             crate_name: crate_name,
             examples: examples,
             no_run: args.get_bool("no-run"),
-            version: args.get_bool("version"),
             args: args,
         };
         res.set_comment();
@@ -63,15 +109,8 @@ impl <'a> Config<'a> {
         if self.module_doc {
             self.module = true;
         }
-        if ! self.file.exists() {
-            self.args.quit("file does not exist");
-        }
-        if let Some(ext) = self.file.extension() {
-            if ext == "md" {
-                self.module_doc = true;
-            }
-        } else {
-            self.args.quit("file must have either .rs or .md extension");
+        if self.file.extension().unwrap() == "md" {
+            self.module_doc = true;
         }
         self.comment = format!("{}//{}",
             if self.module {""} else {&self.indent},
@@ -91,7 +130,6 @@ fn toml_crate_name(cargo_toml: &Path) -> String {
         .next().or_die("totally fked Cargo.toml");
     let idx = name_line.find('"').or_die("no name?");
     (&name_line[(idx+1)..(name_line.len()-1)]).into()
-
 }
 
 fn get_crate() -> (String,PathBuf) {
@@ -100,9 +138,10 @@ fn get_crate() -> (String,PathBuf) {
         let cargo_toml = crate_dir.join("Cargo.toml");
         if cargo_toml.exists() {
             let crate_name = toml_crate_name(&cargo_toml);
+            let examples = crate_dir.join("examples");
             return (
-                crate_name.replace('-',"_").into(),
-                crate_dir.join("examples")
+                crate_name.replace('-',"_").into(), // to make Rust happy...
+                examples
             );
         }
         if ! crate_dir.pop() {
