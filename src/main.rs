@@ -1,7 +1,7 @@
 //! A simple doc test runner. Packages up snippets using similar rules
 //! to cargo test.
-//! It is ASSUMED that you are in an immediate subdirectory of the crate
-//! root
+//!
+//! Please see [readme](https://github.com/stevedonovan/cargo-docgen/blob/master/readme.md)
 
 extern crate easy_shortcuts as es;
 extern crate lapp;
@@ -16,14 +16,8 @@ use std::path::PathBuf;
 use example::Example;
 use util::{findstr,dump_indented};
 
-
 fn main() {
     let mut config = config::Config::new();
-
-    if config.version {
-        println!("version {}",config::VERSION);
-        return;
-    }
 
     let code = es::read_to_string(&config.file);
 
@@ -40,7 +34,6 @@ fn main() {
             eprintln!("****** Copy and paste this into your code ******\n");
             println!("{}",snip);
         }
-
     } else {
         // a whole markdown file
         let start_guard = "```rust";
