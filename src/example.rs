@@ -15,17 +15,37 @@ pub struct Example<'a,'b> where 'b: 'a {
     after: String,
 }
 
+const ALLOW: &[&str] = &["unused_variables", "unused_assignments", "unused_mut",
+    "unused_attributes", "dead_code", "unreachable_code"];
 
 impl <'a,'b> Example<'a,'b> {
     // Convert a doc test into a crate example; at minimum, needs
     // a crate reference and a main function. The question mark operator
     // requires a `run` function that returns any error. We will
     // return the full example, plus any before and after.
+    // see https://doc.rust-lang.org/book/first-edition/documentation.html#documentation-as-tests
 
     pub fn new (config: &'a Config<'b>, code: &str) -> Example<'a,'b> {
         let mut template = String::new();
         let mut before = String::new();
         let mut after = String::new();
+
+        // crate-level attributes have to be top!
+        let mut iter = code.lines();
+        let mut code = String::new();
+        while let Some(line) = iter.next() {
+            if line.starts_with("#![") {
+                template += line;
+                template.push('\n');
+            } else {
+                code += line;
+                code.push('\n');
+            }
+        }
+
+        for lint in ALLOW.iter() {
+            template += &format!("#![allow({})]\n",lint);
+        }
 
         // Tests assume 'extern crate your_crate' unless there's already a declaration
         if code.find("extern crate").is_none() {
@@ -35,18 +55,18 @@ impl <'a,'b> Example<'a,'b> {
         // they will also wrap your code in a main function
         if ! config.question {
             template += "fn main() {\n";
-            template += code;
+            template += &code;
             template += "}\n";
         } else {
             // unless you want to use the question-mark operator;
             // then we have to make up both a run() and main()
-            before += "use std::error::Error;\n\n";
-            before += "fn run() -> Result<(),Box<Error>> {\n";
+            before += "fn run() -> std::result::Result<(),Box<std::error::Error>> {\n";
             template += &before;
-            template += code;
+            template += &code;
             after += "Ok(())\n}\n\nfn main() {\n   run().unwrap();\n}";
             template += &after;
         }
+        println!("template {}",template);
 
         Example{
             config: config,
@@ -80,9 +100,9 @@ impl <'a,'b> Example<'a,'b> {
     // additionally any captured stdout
     pub fn run(&self) -> (bool,String) {
         if self.example.len() == 0 {
-            es::quit("please call massage() before run()");
+            self.config.args.quit("please call massage() before run()");
         }
-        if ! fs::metadata(&self.config.examples).is_dir() {
+        if ! self.config.examples.is_dir() {
             fs::create_dir(&self.config.examples).or_die("cannot create examples directory");
         }
         let test_file = self.config.examples.join(&self.config.file);
