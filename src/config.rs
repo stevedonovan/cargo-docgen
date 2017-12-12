@@ -5,10 +5,11 @@ use std::path::{Path,PathBuf};
 use std::env;
 
 
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.1.2";
 
 const USAGE: &str = "
-cargo docgen. Compiles and runs a test snippet
+cargo docgen. Compiles and runs test snippets
+
     -m, --module module test (//!)
     -M, --module-doc input is a Markdown file containing
         code examples. Assumes `--module`
@@ -16,11 +17,13 @@ cargo docgen. Compiles and runs a test snippet
     -i, --indent (default '0') indent in spaces ('4') or tabs ('1t')
     -n, --no-run
     -V, --version
-    <script> (string) file containing doc test snippet
+
+    <script> (string) file containing doc test snippet.
+    If extension is '.md' assumes --module-doc
 ";
 
-pub struct Config {
-    pub file: String,
+pub struct Config<'a> {
+    pub file: PathBuf,
     pub module: bool,
     pub module_doc: bool,
     pub question: bool,
@@ -30,15 +33,17 @@ pub struct Config {
     pub crate_name: String,
     pub no_run: bool,
     pub version: bool,
+    pub args: lapp::Args<'a>,
 }
 
-impl Config {
-    pub fn new() -> Config {
+impl <'a> Config<'a> {
+    pub fn new() -> Config<'a> {
         let mut args = lapp::Args::new(USAGE).start(2);
         args.parse();
         let (crate_name,examples) = get_crate();
         let mut res = Config {
-            file: args.get_string("script"),
+
+            file: PathBuf::from(args.get_string("script")),
             module: args.get_bool("module"),
             module_doc: args.get_bool("module-doc"),
             question: args.get_bool("question"),
@@ -48,6 +53,7 @@ impl Config {
             examples: examples,
             no_run: args.get_bool("no-run"),
             version: args.get_bool("version"),
+            args: args,
         };
         res.set_comment();
         res
@@ -56,6 +62,16 @@ impl Config {
     fn set_comment(&mut self) {
         if self.module_doc {
             self.module = true;
+        }
+        if ! self.file.exists() {
+            self.args.quit("file does not exist");
+        }
+        if let Some(ext) = self.file.extension() {
+            if ext == "md" {
+                self.module_doc = true;
+            }
+        } else {
+            self.args.quit("file must have either .rs or .md extension");
         }
         self.comment = format!("{}//{}",
             if self.module {""} else {&self.indent},

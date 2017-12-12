@@ -7,8 +7,8 @@ use std::process;
 
 use util::append_indented;
 
-pub struct Example<'a> {
-    config: &'a Config,
+pub struct Example<'a,'b> where 'b: 'a {
+    config: &'a Config<'b>,
     code: String,
     example: String,
     before: String,
@@ -16,13 +16,13 @@ pub struct Example<'a> {
 }
 
 
-impl <'a> Example<'a> {
+impl <'a,'b> Example<'a,'b> {
     // Convert a doc test into a crate example; at minimum, needs
     // a crate reference and a main function. The question mark operator
     // requires a `run` function that returns any error. We will
     // return the full example, plus any before and after.
 
-    pub fn new (config: &'a Config, code: &str) -> Example<'a> {
+    pub fn new (config: &'a Config<'b>, code: &str) -> Example<'a,'b> {
         let mut template = String::new();
         let mut before = String::new();
         let mut after = String::new();
@@ -94,7 +94,7 @@ impl <'a> Example<'a> {
             .arg("-q")
             .arg("--color").arg("always") // let the Colours flow through, man
             .arg("--example")
-            .arg(self.config.file.replace(".rs",""))
+            .arg(self.config.file.with_extension(""))
             .output().or_die("could not run cargo");
 
         let errors = String::from_utf8_lossy(&output.stderr);

@@ -12,6 +12,7 @@ mod example;
 mod config;
 mod util;
 
+use std::path::PathBuf;
 use example::Example;
 use util::{findstr,dump_indented};
 
@@ -65,7 +66,7 @@ fn main() {
             };
             let (end1,end2) = findstr(s,guard).or_die("expecting end of code ```");
             let snippet = &s[0..end1];
-            config.file = format!("t{}.rs",kount);
+            config.file = PathBuf::from(format!("t{}.rs",kount));
             let ex = Example::new(&config,snippet);
             // don't run the test again if we have seen this snippet!
             if snippet_cache.iter().position(|s| s == snippet).is_none() {
