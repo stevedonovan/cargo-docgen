@@ -12,7 +12,7 @@ first edition of the Rust book:
 Every item (module, function, method, etc) should have an example which both _compiles_ and
 _runs as a test_.
 
-However, if you mosey to that most excellent site [docs.rs](https://docs.rs) and browse some of
+However, if you mosey to that most excellent resource [docs.rs](https://docs.rs) and browse some of
 the 11,000-odd crates, you will see that many don't even try to provide any documentation, which
 is disappointimg and leaves you with the irritating necessity of _actually reading the source_.
 Part of this is just human nature, or at least the nature of programmers who find it difficult
