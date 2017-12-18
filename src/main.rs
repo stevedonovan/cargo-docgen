@@ -50,13 +50,18 @@ fn main() {
             // and skip the guard and find the end
             s = &s[start2..];
             // ```rust? means the snippet has a Question
-            config.question = if s.starts_with('?') {
-                s = &s[2..]; // skip ?\n
-                true
-            } else {
-                s = &s[1..]; // skip \n
-                false
-            };
+            // and this might be followed with 'n' for 'just compile dammit'
+            config.question = false;
+            config.no_run = false;
+            if s.starts_with('?') {
+                s = &s[1..];
+                config.question = true;
+            }
+            if s.starts_with('n') {
+                s = &s[1..];
+                config.no_run = true;
+            }
+            s = &s[1..]; // skip \n
             let (end1,end2) = findstr(s,guard).or_die("expecting end of code ```");
             let snippet = &s[0..end1];
             config.file = PathBuf::from(format!("t{}.rs",kount));

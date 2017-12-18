@@ -1,6 +1,6 @@
-[root]
+[[package]]
 name = "cargo-docgen"
-version = "0.1.1"
+version = "0.1.3"
 dependencies = [
  "easy-shortcuts 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lapp 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",

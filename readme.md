@@ -179,7 +179,8 @@ This is almost the Github-flavoured Markdown that we know and love, with one lit
 If a doc test uses the question-operator, `cargo codegen` needs to know so it can
 generate the necessary boilerplate. Since reliably detecting `?` in source is tricky
 (it could be in a comment, or in a string) I've opted for an explicit approach, where
-the usual guard "```rust" becomes "```rust?".
+the usual guard "```rust" becomes "```rust?".  You can also say "```rust?n" for 'no run'
+as before.
 
 Running `cargo docgen -M doc.md` gives, after _running each snippet_:
 

@@ -106,11 +106,11 @@ impl <'a> Config<'a> {
     }
 
     fn set_comment(&mut self) {
-        if self.module_doc {
-            self.module = true;
-        }
         if self.file.extension().unwrap() == "md" {
             self.module_doc = true;
+        }
+        if self.module_doc {
+            self.module = true;
         }
         self.comment = format!("{}//{}",
             if self.module {""} else {&self.indent},

@@ -66,7 +66,7 @@ impl <'a,'b> Example<'a,'b> {
             after += "Ok(())\n}\n\nfn main() {\n   run().unwrap();\n}";
             template += &after;
         }
-        println!("template {}",template);
+        //println!("template {}",template);
 
         Example{
             config: config,
